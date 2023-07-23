@@ -6,7 +6,8 @@ import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OrdinalEncoder,StandardScaler
+from imblearn.combine import SMOTETomek
+from sklearn.preprocessing import OrdinalEncoder,StandardScaler,RobustScaler
 
 from src.exception import CustomException
 from src.logger import logging
@@ -36,29 +37,14 @@ class DataTransformation:
             logging.info('Pipeline Initiated')
 
             ## Numerical Pipeline
-            num_pipeline=Pipeline(
+            robust_scaler = RobustScaler()
+            simple_imputer = SimpleImputer(strategy="constant", fill_value=0)
+            preprocessor = Pipeline(
                 steps=[
-                ('imputer',SimpleImputer(strategy='median')),
-                ('scaler',StandardScaler())
-
-                ]
-
+                    ("Imputer", simple_imputer), #replace missing values with zero
+                    ("RobustScaler", robust_scaler) #keep every feature in same range and handle outlier
+                    ]
             )
-
-            # Categorigal Pipeline
-            cat_pipeline=Pipeline(
-                steps=[
-                ('imputer',SimpleImputer(strategy='most_frequent')),
-                ('ordinalencoder',OrdinalEncoder(categories=[cut_categories,color_categories,clarity_categories])),
-                ('scaler',StandardScaler())
-                ]
-            )
-
-            preprocessor=ColumnTransformer([
-            ('num_pipeline',num_pipeline,numerical_cols),
-            ('cat_pipeline',cat_pipeline,categorical_cols)
-            ])
-            
             return preprocessor
 
             logging.info('Pipeline Completed')

@@ -2,13 +2,14 @@ import os
 import pandas as pd
 import sys
 from sklearn.model_selection import train_test_split
-
+from src.constant import *
+from pymongo import MongoClient
+from zipfile import Path
 
 from src.logger import logging
 from src.exception import CustomException
 from dataclasses import dataclass
-from src.components.data_transformation import DataTransformation
-from src.components.model_trainer import ModelTrainer
+
 
 
 @dataclass
@@ -25,7 +26,11 @@ class DataIngestion:
     def initiate_data_ingestion(self):
         logging.info('Data Ingestion methods Starts')
         try:
-            df=pd.read_csv('C:\Users\user\Desktop\python\aps_failure_training_set1.csv',na_values='na')
+            mongo_client = MongoClient(MONGO_DB_URL)
+
+            collection = mongo_client[MONGO_DATABASE_NAME][MONGO_COLLECTION_NAME]
+
+            df = pd.DataFrame(list(collection.find()))
             logging.info('Dataset read as pandas Dataframe')
 
             os.makedirs(os.path.dirname(self.ingestion_config.raw_data_path),exist_ok=True)
@@ -47,3 +52,7 @@ class DataIngestion:
         except Exception as e:
             logging.info('Exception occured at Data Ingestion stage')
             raise CustomException(e,sys)
+        
+if __name__=="__main__":
+    obj= DataIngestion()
+    t1,t2= obj.initiate_data_ingestion()
